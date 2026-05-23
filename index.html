@@ -4,28 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Knight — Chess Assistant</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="icon" href="assets/Knight.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #07090d;
-            --card-bg: rgba(255, 255, 255, 0.03);
-            --border: rgba(255, 255, 255, 0.06);
-            --text: #ffffff;
-            --text-sub: #a1a1aa;
-            --accent: #10b981;
-            --accent-glow: rgba(16, 185, 129, 0.2);
-            --btn-shadow: rgba(16, 185, 129, 0.35);
-            --aurora-1: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
-            --aurora-2: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+            --bg: #030305;
+            --card-bg: rgba(255, 255, 255, 0.02);
+            --border: rgba(255, 255, 255, 0.05);
+            --text-main: #ffffff;
+            --text-sub: #8e929a;
+            --text-muted: #4e525a;
+            --accent: #00f09a;
+            --accent-glow: rgba(0, 240, 154, 0.15);
+            --accent-glow-heavy: rgba(0, 240, 154, 0.35);
+            --aurora-1: radial-gradient(circle, rgba(0, 240, 154, 0.07) 0%, transparent 70%);
+            --aurora-2: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
         }
 
         body.rage-mode {
-            --border-glow: rgba(239, 68, 68, 0.35);
-            --accent: #ef4444;
-            --accent-glow: rgba(239, 68, 68, 0.2);
-            --btn-shadow: rgba(239, 68, 68, 0.35);
-            --aurora-1: radial-gradient(circle, rgba(239, 68, 68, 0.1) 0%, transparent 70%);
-            --aurora-2: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%);
+            --accent: #ff1744;
+            --accent-glow: rgba(255, 23, 68, 0.18);
+            --accent-glow-heavy: rgba(255, 23, 68, 0.4);
+            --aurora-1: radial-gradient(circle, rgba(255, 23, 68, 0.1) 0%, transparent 70%);
+            --aurora-2: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
         }
 
         * {
@@ -36,11 +37,11 @@
 
         body {
             background-color: var(--bg);
-            color: var(--text);
+            color: var(--text-main);
             font-family: 'DM Sans', sans-serif;
             line-height: 1.6;
             overflow-x: hidden;
-            transition: background-color 0.5s ease;
+            transition: background-color 0.6s ease;
             position: relative;
         }
 
@@ -48,34 +49,34 @@
             content: '';
             position: fixed;
             top: -20%; left: -20%;
-            width: 80%; height: 80%;
+            width: 85%; height: 85%;
             background: var(--aurora-1);
             z-index: -1;
             filter: blur(60px);
-            animation: move-aurora-1 15s infinite alternate ease-in-out;
-            transition: background 0.6s ease;
+            animation: move-aurora-1 16s infinite alternate ease-in-out;
+            transition: background 0.8s ease;
         }
 
         body::after {
             content: '';
             position: fixed;
             bottom: -20%; right: -20%;
-            width: 80%; height: 80%;
+            width: 85%; height: 85%;
             background: var(--aurora-2);
             z-index: -1;
             filter: blur(60px);
-            animation: move-aurora-2 18s infinite alternate ease-in-out;
-            transition: background 0.6s ease;
+            animation: move-aurora-2 20s infinite alternate ease-in-out;
+            transition: background 0.8s ease;
         }
 
         @keyframes move-aurora-1 {
             0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(40px, 60px) scale(1.1); }
+            100% { transform: translate(50px, 70px) scale(1.1); }
         }
 
         @keyframes move-aurora-2 {
             0% { transform: translate(0, 0) scale(1.1); }
-            100% { transform: translate(-50px, -40px) scale(0.9); }
+            100% { transform: translate(-60px, -50px) scale(0.9); }
         }
 
         .container {
@@ -95,38 +96,68 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             text-decoration: none;
-            color: var(--text);
+            color: var(--text-main);
             font-weight: 700;
             font-size: 20px;
+            letter-spacing: -0.01em;
+        }
+
+        .logo-container {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #12131a 0%, #1e202b 100%);
+            border: 1.5px solid var(--border);
+            border-color: var(--accent);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            animation: float 4s infinite ease-in-out, pulse-glow 3.5s infinite ease-in-out;
+            transition: border-color 0.6s ease;
         }
 
         .logo img {
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             object-fit: contain;
+            pointer-events: none;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-6px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 12px var(--accent-glow), 0 8px 24px rgba(0,0,0,0.4); }
+            50% { box-shadow: 0 0 25px var(--accent-glow-heavy), 0 8px 24px rgba(0,0,0,0.4); }
+            100% { box-shadow: 0 0 12px var(--accent-glow), 0 8px 24px rgba(0,0,0,0.4); }
         }
 
         .git-btn {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 20px;
+            padding: 10px 22px;
             border-radius: 12px;
             background: var(--card-bg);
             border: 1px solid var(--border);
-            color: var(--text);
+            color: var(--text-main);
             text-decoration: none;
             font-size: 13px;
             font-weight: 700;
             transition: all 0.25s ease;
+            backdrop-filter: blur(10px);
         }
 
         .git-btn:hover {
             border-color: var(--accent);
-            box-shadow: 0 0 15px var(--accent-glow);
-            transform: translateY(-1px);
+            box-shadow: 0 0 15px var(--accent-glow-heavy);
+            transform: translateY(-1.5px);
         }
 
         .git-btn svg {
@@ -137,7 +168,7 @@
 
         .hero {
             text-align: center;
-            padding: 80px 0 60px;
+            padding: 90px 0 60px;
         }
 
         .hero h1 {
@@ -145,32 +176,34 @@
             font-weight: 700;
             letter-spacing: -0.02em;
             line-height: 1.15;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 40px rgba(0,0,0,0.8);
         }
 
         .hero h1 span {
             color: var(--accent);
-            transition: color 0.5s ease;
+            transition: color 0.6s ease;
         }
 
         .hero p {
             font-size: 18px;
             color: var(--text-sub);
             max-width: 600px;
-            margin: 0 auto 32px;
+            margin: 0 auto 36px;
         }
 
         .mode-toggle-container {
             display: inline-flex;
             background: var(--card-bg);
             border: 1px solid var(--border);
-            padding: 6px;
+            padding: 5px;
             border-radius: 16px;
-            margin-bottom: 48px;
+            backdrop-filter: blur(14px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
         }
 
         .mode-toggle-btn {
-            padding: 10px 24px;
+            padding: 11px 26px;
             border: none;
             background: none;
             color: var(--text-sub);
@@ -199,15 +232,16 @@
             border: 1px solid var(--border);
             border-radius: 20px;
             padding: 32px;
-            backdrop-filter: blur(14px);
-            transition: all 0.3s ease;
+            backdrop-filter: blur(16px);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             text-align: left;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 4px 20px rgba(0,0,0,0.15);
         }
 
         .card:hover {
             border-color: var(--accent);
-            box-shadow: 0 8px 32px var(--accent-glow);
-            transform: translateY(-3px);
+            box-shadow: 0 8px 32px var(--accent-glow-heavy);
+            transform: translateY(-4px);
         }
 
         .card-icon {
@@ -221,7 +255,7 @@
             justify-content: center;
             color: var(--accent);
             margin-bottom: 24px;
-            transition: color 0.5s ease, border-color 0.5s ease;
+            transition: color 0.6s ease, border-color 0.6s ease;
         }
 
         .card-icon svg {
@@ -270,9 +304,16 @@
             border: 1px solid var(--border);
             padding: 24px;
             border-radius: 16px;
-            backdrop-filter: blur(14px);
+            backdrop-filter: blur(16px);
             align-items: flex-start;
             text-align: left;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+        }
+
+        .step:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px var(--accent-glow);
         }
 
         .step-num {
@@ -289,7 +330,7 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: color 0.5s ease;
+            transition: color 0.6s ease, border-color 0.6s ease;
         }
 
         .step-text h4 {
@@ -312,6 +353,7 @@
             max-width: 650px;
             margin: 60px auto 0;
             text-align: left;
+            backdrop-filter: blur(16px);
         }
 
         .disclaimer-box h4 {
@@ -352,7 +394,9 @@
     <div class="container">
         <header>
             <a href="#" class="logo">
-                <img src="assets/Knight.png" alt="Knight Logo">
+                <div class="logo-container" id="corner-logo">
+                    <img src="assets/Knight.png" alt="Knight Logo" id="logo-img">
+                </div>
                 <span>Knight</span>
             </a>
             <a href="https://github.com/physicalaff/Knight-Chess-Helper" target="_blank" class="git-btn">
@@ -402,7 +446,7 @@
                     <div class="step-num">1</div>
                     <div class="step-text">
                         <h4>Скачайте исходный код</h4>
-                        <p>Перейдите во вкладку <a href="https://github.com/physicalaff/Knight-Chess-Helper/releases" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 700;">Releases</a> и скачайте архив последней версии расширения.</p>
+                        <p>Перейдите во вкладку <a href="https://github.com/physicalaff/Knight-Chess-Helper/releases" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 700; transition: color 0.5s ease;">Releases</a> и скачайте архив последней версии расширения.</p>
                     </div>
                 </div>
                 <div class="step">
@@ -442,16 +486,32 @@
     </footer>
 
     <script>
+        function setFavicon(url) {
+            let link = document.querySelector("link[rel~='icon']");
+            if (!link) {
+                link = document.createElement('link');
+                link.rel = 'icon';
+                document.head.appendChild(link);
+            }
+            link.href = url;
+        }
+
         function setMode(isRage) {
             const btns = document.querySelectorAll('.mode-toggle-btn');
+            const logoImg = document.getElementById('logo-img');
+            
             if (isRage) {
                 document.body.classList.add('rage-mode');
                 btns[0].classList.remove('active');
                 btns[1].classList.add('active');
+                logoImg.src = 'assets/sf.gif';
+                setFavicon('assets/sf.gif');
             } else {
                 document.body.classList.remove('rage-mode');
                 btns[0].classList.add('active');
                 btns[1].classList.remove('active');
+                logoImg.src = 'assets/Knight.png';
+                setFavicon('assets/Knight.png');
             }
         }
     </script>
