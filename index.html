@@ -1,519 +1,376 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Knight — Chess Assistant</title>
-    <link rel="icon" href="assets/Knight.png" type="image/png">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #030305;
-            --card-bg: rgba(255, 255, 255, 0.02);
-            --border: rgba(255, 255, 255, 0.05);
-            --text-main: #ffffff;
-            --text-sub: #8e929a;
-            --text-muted: #4e525a;
-            --accent: #00f09a;
-            --accent-glow: rgba(0, 240, 154, 0.15);
-            --accent-glow-heavy: rgba(0, 240, 154, 0.35);
-            --aurora-1: radial-gradient(circle, rgba(0, 240, 154, 0.07) 0%, transparent 70%);
-            --aurora-2: radial-gradient(circle, rgba(99, 102, 241, 0.05) 0%, transparent 70%);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knight — a local chess engine inside Chess.com</title>
+  <meta name="description" content="Knight is a browser extension that brings a local Stockfish engine to Chess.com — evaluation, best-move hints and opening theory, running entirely on your machine." />
 
-        body.rage-mode {
-            --accent: #ff1744;
-            --accent-glow: rgba(255, 23, 68, 0.18);
-            --accent-glow-heavy: rgba(255, 23, 68, 0.4);
-            --aurora-1: radial-gradient(circle, rgba(255, 23, 68, 0.1) 0%, transparent 70%);
-            --aurora-2: radial-gradient(circle, rgba(139, 92, 246, 0.05) 0%, transparent 70%);
-        }
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Knight — a local chess engine inside Chess.com" />
+  <meta property="og:description" content="A private Stockfish engine, right inside your board. Evaluation, best-move hints, opening book — local, offline, open source." />
+  <meta property="og:image" content="./og-image.png" />
+  <meta property="og:url" content="https://physicalaff.github.io/Knight-Chess-Helper/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="theme-color" content="#08080B" />
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="./assets/favicon-64.png" />
+  <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png" />
 
-        body {
-            background-color: var(--bg);
-            color: var(--text-main);
-            font-family: 'DM Sans', sans-serif;
-            line-height: 1.6;
-            overflow-x: hidden;
-            transition: background-color 0.6s ease;
-            position: relative;
-        }
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: -20%; left: -20%;
-            width: 85%; height: 85%;
-            background: var(--aurora-1);
-            z-index: -1;
-            filter: blur(60px);
-            animation: move-aurora-1 16s infinite alternate ease-in-out;
-            transition: background 0.8s ease;
-        }
-
-        body::after {
-            content: '';
-            position: fixed;
-            bottom: -20%; right: -20%;
-            width: 85%; height: 85%;
-            background: var(--aurora-2);
-            z-index: -1;
-            filter: blur(60px);
-            animation: move-aurora-2 20s infinite alternate ease-in-out;
-            transition: background 0.8s ease;
-        }
-
-        @keyframes move-aurora-1 {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(50px, 70px) scale(1.1); }
-        }
-
-        @keyframes move-aurora-2 {
-            0% { transform: translate(0, 0) scale(1.1); }
-            100% { transform: translate(-60px, -50px) scale(0.9); }
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 0;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            text-decoration: none;
-            color: var(--text-main);
-            font-weight: 700;
-            font-size: 20px;
-            letter-spacing: -0.01em;
-        }
-
-        .logo-container {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #12131a 0%, #1e202b 100%);
-            border: 1.5px solid var(--border);
-            border-color: var(--accent);
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-            animation: float 4s infinite ease-in-out, pulse-glow 3.5s infinite ease-in-out;
-            transition: border-color 0.6s ease;
-        }
-
-        .logo img {
-            width: 32px;
-            height: 32px;
-            object-fit: contain;
-            pointer-events: none;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-6px); }
-            100% { transform: translateY(0px); }
-        }
-
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 12px var(--accent-glow), 0 8px 24px rgba(0,0,0,0.4); }
-            50% { box-shadow: 0 0 25px var(--accent-glow-heavy), 0 8px 24px rgba(0,0,0,0.4); }
-            100% { box-shadow: 0 0 12px var(--accent-glow), 0 8px 24px rgba(0,0,0,0.4); }
-        }
-
-        .git-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 22px;
-            border-radius: 12px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 700;
-            transition: all 0.25s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .git-btn:hover {
-            border-color: var(--accent);
-            box-shadow: 0 0 15px var(--accent-glow-heavy);
-            transform: translateY(-1.5px);
-        }
-
-        .git-btn svg {
-            width: 16px;
-            height: 16px;
-            fill: currentColor;
-        }
-
-        .hero {
-            text-align: center;
-            padding: 90px 0 60px;
-        }
-
-        .hero h1 {
-            font-size: 48px;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            line-height: 1.15;
-            margin-bottom: 20px;
-            text-shadow: 0 0 40px rgba(0,0,0,0.8);
-        }
-
-        .hero h1 span {
-            color: var(--accent);
-            transition: color 0.6s ease;
-        }
-
-        .hero p {
-            font-size: 18px;
-            color: var(--text-sub);
-            max-width: 600px;
-            margin: 0 auto 36px;
-        }
-
-        .mode-toggle-container {
-            display: inline-flex;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 5px;
-            border-radius: 16px;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-        }
-
-        .mode-toggle-btn {
-            padding: 11px 26px;
-            border: none;
-            background: none;
-            color: var(--text-sub);
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .mode-toggle-btn.active {
-            background: var(--accent);
-            color: #ffffff;
-            box-shadow: 0 4px 15px var(--btn-shadow);
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
-            margin-bottom: 80px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 32px;
-            backdrop-filter: blur(16px);
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            text-align: left;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.02), 0 4px 20px rgba(0,0,0,0.15);
-        }
-
-        .card:hover {
-            border-color: var(--accent);
-            box-shadow: 0 8px 32px var(--accent-glow-heavy);
-            transform: translateY(-4px);
-        }
-
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            background: var(--bg-strip);
-            border: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent);
-            margin-bottom: 24px;
-            transition: color 0.6s ease, border-color 0.6s ease;
-        }
-
-        .card-icon svg {
-            width: 24px;
-            height: 24px;
-            fill: currentColor;
-        }
-
-        .card h3 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 12px;
-        }
-
-        .card p {
-            font-size: 14px;
-            color: var(--text-sub);
-            line-height: 1.6;
-        }
-
-        .section-title {
-            text-align: center;
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 48px;
-            letter-spacing: -0.01em;
-        }
-
-        .installation {
-            padding: 80px 0;
-            border-top: 1px solid var(--border);
-        }
-
-        .steps {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 650px;
-            margin: 0 auto;
-        }
-
-        .step {
-            display: flex;
-            gap: 24px;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 24px;
-            border-radius: 16px;
-            backdrop-filter: blur(16px);
-            align-items: flex-start;
-            text-align: left;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
-        }
-
-        .step:hover {
-            border-color: var(--accent);
-            box-shadow: 0 4px 20px var(--accent-glow);
-        }
-
-        .step-num {
-            font-family: 'DM Mono', monospace;
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--accent);
-            background: var(--bg-item);
-            border: 1px solid var(--border);
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            transition: color 0.6s ease, border-color 0.6s ease;
-        }
-
-        .step-text h4 {
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
-
-        .step-text p {
-            font-size: 13.5px;
-            color: var(--text-sub);
-            line-height: 1.5;
-        }
-
-        .disclaimer-box {
-            background: rgba(239, 68, 68, 0.02);
-            border: 1px solid rgba(239, 68, 68, 0.12);
-            border-radius: 16px;
-            padding: 24px;
-            max-width: 650px;
-            margin: 60px auto 0;
-            text-align: left;
-            backdrop-filter: blur(16px);
-        }
-
-        .disclaimer-box h4 {
-            color: #ef4444;
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .disclaimer-box p {
-            font-size: 12.5px;
-            color: var(--text-sub);
-            line-height: 1.6;
-        }
-
-        footer {
-            border-top: 1px solid var(--border);
-            padding: 40px 0;
-            text-align: center;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 80px;
-        }
-
-        @media (max-width: 600px) {
-            .hero h1 { font-size: 36px; }
-            .hero p { font-size: 15px; }
-            .section-title { font-size: 26px; }
-            .step { flex-direction: column; gap: 12px; }
-        }
-    </style>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
 
-    <div class="container">
-        <header>
-            <a href="#" class="logo">
-                <div class="logo-container" id="corner-logo">
-                    <img src="assets/Knight.png" alt="Knight Logo" id="logo-img">
-                </div>
-                <span>Knight</span>
-            </a>
-            <a href="https://github.com/physicalaff/Knight-Chess-Helper" target="_blank" class="git-btn">
-                <svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
-                <span>GitHub</span>
-            </a>
-        </header>
+  <div class="bg-aura" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
 
-        <section class="hero">
-            <h1>Умный ассистент <br><span>Knight Chess Helper</span></h1>
-            <p>Локальный шахматный помощник для Chess.com, работающий прямо в вашем браузере силами WebAssembly.</p>
-            
-            <div class="mode-toggle-container">
-                <button class="mode-toggle-btn active" onclick="setMode(false)">Regular Mode</button>
-                <button class="mode-toggle-btn" onclick="setMode(true)">Rage Mode</button>
-            </div>
-        </section>
-
-        <section class="grid">
-            <div class="card">
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
-                </div>
-                <h3>Локальный Stockfish 18</h3>
-                <p>Никаких внешних серверов. Движок компилируется в среде WebAssembly прямо внутри расширения, защищая ваши данные и минимизируя задержки.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/><path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-                </div>
-                <h3>Умный тайминг ходов</h3>
-                <p>Бот анализирует позицию: делает очевидные взятия в ответ мгновенно (за 100-300 мс), но надолго «задумывается» в сложных тактических ситуациях.</p>
-            </div>
-            <div class="card">
-                <div class="card-icon">
-                    <svg viewBox="0 0 24 24"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10zm1-15h-2v2h2V7zm0 4h-2v6h2v-6z"/></svg>
-                </div>
-                <h3>Анти-бан алгоритмы 3.0</h3>
-                <p>Симуляция кривых Безье с микродрожанием руки, имитация случайных мискликов, усталость к концу игры и отвлечения на 8-15 секунд.</p>
-            </div>
-        </section>
-
-        <section class="installation">
-            <h2 class="section-title">Как установить расширение</h2>
-            <div class="steps">
-                <div class="step">
-                    <div class="step-num">1</div>
-                    <div class="step-text">
-                        <h4>Скачайте исходный код</h4>
-                        <p>Перейдите во вкладку <a href="https://github.com/physicalaff/Knight-Chess-Helper/releases" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 700; transition: color 0.5s ease;">Releases</a> и скачайте архив последней версии расширения.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-num">2</div>
-                    <div class="step-text">
-                        <h4>Распакуйте файлы</h4>
-                        <p>Распакуйте содержимое архива в любую чистую папку на вашем компьютере.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-num">3</div>
-                    <div class="step-text">
-                        <h4>Включите режим разработчика</h4>
-                        <p>Откройте в браузере страницу <code>chrome://extensions/</code> (или <code>about:debugging</code> в Firefox) и включите тумблер <strong>Режим разработчика</strong>.</p>
-                    </div>
-                </div>
-                <div class="step">
-                    <div class="step-num">4</div>
-                    <div class="step-text">
-                        <h4>Загрузите расширение</h4>
-                        <p>Нажмите кнопку <strong>Загрузить распакованное расширение</strong> (Load unpacked) и выберите папку, в которую распаковали файлы.</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="disclaimer-box">
-                <h4>⚠️ Важное предупреждение</h4>
-                <p>Данное программное обеспечение создано исключительно в образовательных и научно-исследовательских целях. Использование шахматных ассистентов в рейтинговых матчах нарушает правила Chess.com и неминуемо приведет к блокировке вашего аккаунта. Автор не несет ответственности за любые блокировки аккаунтов.</p>
-            </div>
-        </section>
+  <!-- ───────────────────────── NAV ───────────────────────── -->
+  <header class="nav" id="top">
+    <div class="nav__inner">
+      <a class="brand" href="#top" aria-label="Knight — home">
+        <img class="brand__logo" src="./assets/knight-logo.png" alt="" width="28" height="28" />
+        <span class="brand__name">Knight</span>
+      </a>
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#features" data-i18n="nav.features">Features</a>
+        <a href="#how" data-i18n="nav.how">How it works</a>
+        <a href="#gallery" data-i18n="nav.look">A closer look</a>
+        <a href="#install" data-i18n="nav.install">Install</a>
+      </nav>
+      <div class="nav__actions">
+        <button class="lang" id="langToggle" type="button" aria-label="Switch language">
+          <span class="lang__opt is-active" data-lang="en">EN</span>
+          <span class="lang__sep" aria-hidden="true">/</span>
+          <span class="lang__opt" data-lang="ru">RU</span>
+        </button>
+        <a class="btn btn--ghost btn--sm" href="https://github.com/physicalaff/Knight-Chess-Helper" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor"><path d="M12 .5A11.5 11.5 0 0 0 .5 12 11.5 11.5 0 0 0 8.4 23c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2 0 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17.3 4.7 18.3 5 18.3 5c.6 1.6.2 2.8.1 3.1.7.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+          <span data-i18n="nav.github">GitHub</span>
+          <span class="ghstars" id="ghStars" aria-hidden="true"></span>
+        </a>
+      </div>
     </div>
+  </header>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Knight Chess Helper. Licensed under MIT & GPLv3. Developed by physicalaff.</p>
+  <main id="main">
+    <!-- ───────────────────────── HERO ───────────────────────── -->
+    <section class="hero">
+      <div class="hero__copy">
+        <a class="pill" href="https://github.com/physicalaff/Knight-Chess-Helper/releases" target="_blank" rel="noopener">
+          <span class="pill__dot" aria-hidden="true"></span>
+          <span data-i18n="hero.pill">Local Stockfish for Chess.com</span>
+          <span class="pill__arrow" aria-hidden="true">→</span>
+        </a>
+        <h1 class="hero__title" data-i18n="hero.title">A chess engine that lives on your board.</h1>
+        <p class="hero__lead" data-i18n="hero.lead">
+          Knight puts a private Stockfish engine right inside Chess.com — live evaluation,
+          best-move hints and opening theory, computed entirely on your machine.
+        </p>
+        <div class="hero__cta">
+          <a class="btn btn--primary" href="https://github.com/physicalaff/Knight-Chess-Helper/releases" target="_blank" rel="noopener" data-i18n="hero.install">Install Knight</a>
+          <a class="btn btn--ghost" href="https://github.com/physicalaff/Knight-Chess-Helper" target="_blank" rel="noopener" data-i18n="hero.source">View on GitHub</a>
         </div>
-    </footer>
+        <ul class="hero__meta" aria-label="Key facts">
+          <li><svg viewBox="0 0 24 24" class="i" aria-hidden="true"><path d="M12 3l7 4v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V7l7-4z"/><path d="M9 12l2 2 4-4"/></svg><span data-i18n="meta.local">100% local</span></li>
+          <li><svg viewBox="0 0 24 24" class="i" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>Manifest V3</li>
+          <li><svg viewBox="0 0 24 24" class="i" aria-hidden="true"><path d="M8 4h8M9 4v6l-4 8a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-4-8V4"/></svg><span data-i18n="meta.open">Open source · MIT</span></li>
+        </ul>
+      </div>
 
-    <script>
-        function setFavicon(url) {
-            let link = document.querySelector("link[rel~='icon']");
-            if (!link) {
-                link = document.createElement('link');
-                link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = url;
-        }
+      <figure class="hero__shot">
+        <div class="shot__glow" aria-hidden="true"></div>
+        <img class="shot__img" src="./assets/menu-dark.png" alt="Knight panel inside Chess.com showing position strength, auto-play, ELO and best-move hint controls" width="874" height="1771" loading="eager" />
+      </figure>
+    </section>
 
-        function setMode(isRage) {
-            const btns = document.querySelectorAll('.mode-toggle-btn');
-            const logoImg = document.getElementById('logo-img');
-            
-            if (isRage) {
-                document.body.classList.add('rage-mode');
-                btns[0].classList.remove('active');
-                btns[1].classList.add('active');
-                logoImg.src = 'assets/sf.gif';
-                setFavicon('assets/sf.gif');
-            } else {
-                document.body.classList.remove('rage-mode');
-                btns[0].classList.add('active');
-                btns[1].classList.remove('active');
-                logoImg.src = 'assets/Knight.png';
-                setFavicon('assets/Knight.png');
-            }
-        }
-    </script>
+    <!-- ───────────────────────── PROOF STRIP ───────────────────────── -->
+    <section class="strip" aria-label="Highlights">
+      <div class="strip__item">
+        <svg viewBox="0 0 24 24" class="i" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h6v6H9z"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/></svg>
+        <span data-i18n="strip.engine">Stockfish in WebAssembly</span>
+      </div>
+      <div class="strip__item">
+        <svg viewBox="0 0 24 24" class="i" aria-hidden="true"><path d="M5 12.5l1.5-1.5M2 9c5-4 15-4 20 0"/><path d="M8.5 16l1.5-1.5M5.5 12.8c3.5-2.8 9.5-2.8 13 0"/><circle cx="12" cy="19" r="1.2"/><path d="M3 3l18 18"/></svg>
+        <span data-i18n="strip.offline">Works offline</span>
+      </div>
+      <div class="strip__item">
+        <svg viewBox="0 0 24 24" class="i" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        <span data-i18n="strip.private">No accounts · no telemetry</span>
+      </div>
+      <div class="strip__item">
+        <svg viewBox="0 0 24 24" class="i" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+        <span data-i18n="strip.lang">English & Russian</span>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── FEATURES (BENTO) ───────────────────────── -->
+    <section class="block" id="features">
+      <header class="block__head reveal">
+        <p class="eyebrow"><span data-i18n="feat.kicker">Features</span></p>
+        <h2 class="block__title" data-i18n="feat.title">Everything you need, on the board.</h2>
+        <p class="block__intro" data-i18n="feat.intro">A complete analysis companion that draws right onto Chess.com — no tabs, no copy-paste, no waiting.</p>
+      </header>
+
+      <div class="bento">
+        <!-- big: local & private -->
+        <article class="card card--lg reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.3"/></svg></div>
+          <h3 data-i18n="card.local.h">Local &amp; private by design</h3>
+          <p data-i18n="card.local.p">Stockfish runs as a WebAssembly worker on your own hardware. No servers, no accounts, no data ever leaves the browser.</p>
+          <ul class="chips" aria-hidden="false">
+            <li data-i18n="chip.noserver">No servers</li>
+            <li data-i18n="chip.noaccount">No accounts</li>
+            <li data-i18n="chip.notelemetry">No telemetry</li>
+          </ul>
+        </article>
+
+        <!-- big: best-move hints (interactive board) -->
+        <article class="card card--lg card--board reveal">
+          <div class="card__text">
+            <div class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V8l5 5 4-4 5 5"/><path d="M14 9h5v5"/></svg></div>
+            <h3 data-i18n="card.hint.h">Best-move hints, drawn for you</h3>
+            <p data-i18n="card.hint.p">The engine paints its top candidate straight onto the board — here, the knight leaps to g5.</p>
+          </div>
+          <div class="miniboard">
+            <div class="miniboard__eval" aria-hidden="true"><span class="miniboard__white" id="evalWhite"></span></div>
+            <div class="miniboard__wrap">
+              <div class="board" id="board" role="img" aria-label="Two Knights Defense; engine recommends knight to g5"></div>
+              <svg class="board__arrow" id="boardArrow" viewBox="0 0 8 8" preserveAspectRatio="none" aria-hidden="true"></svg>
+            </div>
+          </div>
+        </article>
+
+        <!-- eval -->
+        <article class="card reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+          <h3 data-i18n="card.eval.h">Position strength</h3>
+          <p data-i18n="card.eval.p">A live bar reads the position in centipawns, so you always know who stands better.</p>
+          <div class="evalrow" aria-hidden="true"><span class="evalrow__fill"></span><b>+0.5</b></div>
+        </article>
+
+        <!-- opening book -->
+        <article class="card reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6c-2-1.3-5-1.3-7 0v12c2-1.3 5-1.3 7 0 2-1.3 5-1.3 7 0V6c-2-1.3-5-1.3-7 0z"/><path d="M12 6v12"/></svg></div>
+          <h3 data-i18n="card.book.h">Opening book</h3>
+          <p data-i18n="card.book.p">Knight recognizes known lines and names the theory as the game unfolds.</p>
+          <span class="tag" aria-hidden="true">Two Knights Defense</span>
+        </article>
+
+        <!-- stats -->
+        <article class="card reveal">
+          <div class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 15l4-5 3 3 5-7 4 6"/><path d="M3 20h18"/></svg></div>
+          <h3 data-i18n="card.stats.h">Match statistics</h3>
+          <p data-i18n="card.stats.p">Track your games over time and surface the patterns in how you play.</p>
+          <svg class="spark" viewBox="0 0 120 36" aria-hidden="true"><polyline points="2,28 18,22 34,26 50,14 66,18 82,8 98,12 118,4"/></svg>
+        </article>
+
+        <!-- themes (wide) -->
+        <article class="card card--wide card--themes reveal">
+          <div class="card__text">
+            <div class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+            <h3 data-i18n="card.theme.h">Light &amp; dark themes</h3>
+            <p data-i18n="card.theme.p">Tuned to sit cleanly on top of Chess.com, whatever the hour.</p>
+          </div>
+          <div class="themes__shots" aria-hidden="true">
+            <img src="./assets/menu-dark.png" alt="" width="874" height="1771" loading="lazy" />
+            <img src="./assets/menu-light.png" alt="" width="804" height="1688" loading="lazy" />
+          </div>
+        </article>
+
+        <!-- language (wide) -->
+        <article class="card card--wide card--lang reveal">
+          <div class="card__text">
+            <div class="card__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div>
+            <h3 data-i18n="card.lang.h">English &amp; Russian</h3>
+            <p data-i18n="card.lang.p">The full interface speaks both languages — switch any time, including on this page.</p>
+          </div>
+          <div class="lang__demo" aria-hidden="true">
+            <span class="lang__flag">🇬🇧 English</span>
+            <span class="lang__flag">🇷🇺 Русский</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── HOW IT WORKS ───────────────────────── -->
+    <section class="block" id="how">
+      <header class="block__head reveal">
+        <p class="eyebrow"><span data-i18n="how.kicker">Under the hood</span></p>
+        <h2 class="block__title" data-i18n="how.title">A clean Manifest V3 pipeline.</h2>
+        <p class="block__intro" data-i18n="how.intro">Content scripts read the board and draw on it, a background worker routes requests, and an offscreen document runs the engine.</p>
+      </header>
+      <ol class="pipe reveal" aria-label="How a position becomes an evaluation">
+        <li class="node">
+          <div class="node__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <h3 data-i18n="how.s1.h">Board</h3>
+          <p data-i18n="how.s1.p">Content scripts read the live position and render hints on the board.</p>
+        </li>
+        <li class="node">
+          <div class="node__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></div>
+          <h3 data-i18n="how.s2.h">Service worker</h3>
+          <p data-i18n="how.s2.p">The background worker coordinates messages and engine requests.</p>
+        </li>
+        <li class="node">
+          <div class="node__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h5"/></svg></div>
+          <h3 data-i18n="how.s3.h">Offscreen engine</h3>
+          <p data-i18n="how.s3.p">An offscreen document hosts the Stockfish WebAssembly worker.</p>
+        </li>
+        <li class="node">
+          <div class="node__ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></div>
+          <h3 data-i18n="how.s4.h">Evaluation</h3>
+          <p data-i18n="how.s4.p">The score and best move return, drawn back onto the board.</p>
+        </li>
+      </ol>
+    </section>
+
+    <!-- ───────────────────────── COMPARISON ───────────────────────── -->
+    <section class="block" id="compare">
+      <header class="block__head reveal">
+        <p class="eyebrow"><span data-i18n="cmp.kicker">Why local</span></p>
+        <h2 class="block__title" data-i18n="cmp.title">Yours, not the cloud's.</h2>
+        <p class="block__intro" data-i18n="cmp.intro">Most “helpers” ship your games to someone’s server. Knight keeps everything on your machine.</p>
+      </header>
+      <div class="compare reveal" role="table" aria-label="Knight versus cloud helpers">
+        <div class="compare__row compare__head" role="row">
+          <span role="columnheader"></span>
+          <span class="compare__knight" role="columnheader"><img src="./assets/knight-logo.png" alt="" width="20" height="20" />Knight</span>
+          <span class="compare__other" role="columnheader" data-i18n="cmp.other">Cloud helpers</span>
+        </div>
+        <div class="compare__row" role="row"><span data-i18n="cmp.r1">Runs on your device</span><span class="ok" aria-label="yes">✓</span><span class="no" aria-label="no">✕</span></div>
+        <div class="compare__row" role="row"><span data-i18n="cmp.r2">Works fully offline</span><span class="ok" aria-label="yes">✓</span><span class="no" aria-label="no">✕</span></div>
+        <div class="compare__row" role="row"><span data-i18n="cmp.r3">No sign-up, no account</span><span class="ok" aria-label="yes">✓</span><span class="no" aria-label="no">✕</span></div>
+        <div class="compare__row" role="row"><span data-i18n="cmp.r4">Source you can read</span><span class="ok" aria-label="yes">✓</span><span class="no" aria-label="no">✕</span></div>
+        <div class="compare__row" role="row"><span data-i18n="cmp.r5">Free, with no limits</span><span class="ok" aria-label="yes">✓</span><span class="mid" aria-label="varies">~</span></div>
+        <div class="compare__row" role="row"><span data-i18n="cmp.r6">Your data stays private</span><span class="ok" aria-label="yes">✓</span><span class="no" aria-label="no">✕</span></div>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── A CLOSER LOOK ───────────────────────── -->
+    <section class="block" id="gallery">
+      <div class="look">
+        <div class="look__copy reveal">
+          <p class="eyebrow"><span data-i18n="look.kicker">A closer look</span></p>
+          <h2 class="block__title" data-i18n="look.title">Tune it to the way you play.</h2>
+          <p class="block__intro" data-i18n="look.intro">One panel, sensibly arranged. Pick a theme and language, set an ELO profile, then let the engine do the rest.</p>
+          <ul class="ticks">
+            <li><svg viewBox="0 0 24 24" class="i" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span data-i18n="look.t1">Dark or light theme</span></li>
+            <li><svg viewBox="0 0 24 24" class="i" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span data-i18n="look.t2">English or Russian interface</span></li>
+            <li><svg viewBox="0 0 24 24" class="i" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span data-i18n="look.t3">ELO profile from beginner to club player</span></li>
+            <li><svg viewBox="0 0 24 24" class="i" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg><span data-i18n="look.t4">Human-like timing controls</span></li>
+          </ul>
+        </div>
+        <figure class="look__shot reveal">
+          <div class="shot__glow shot__glow--sm" aria-hidden="true"></div>
+          <img src="./assets/menu-settings.png" alt="Knight settings panel with theme, language and profile options" width="874" height="991" loading="lazy" />
+        </figure>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── INSTALL ───────────────────────── -->
+    <section class="block" id="install">
+      <header class="block__head reveal">
+        <p class="eyebrow"><span data-i18n="install.kicker">Install</span></p>
+        <h2 class="block__title" data-i18n="install.title">Up and running in a minute.</h2>
+        <p class="block__intro" data-i18n="install.intro">Knight ships as an unpacked extension for Chromium browsers — Chrome, Edge, Brave. Firefox support is experimental.</p>
+      </header>
+      <div class="install">
+        <ol class="steps reveal">
+          <li class="step"><span class="step__n">1</span><span data-i18n="install.s1">Download the latest release from GitHub.</span></li>
+          <li class="step"><span class="step__n">2</span><span data-i18n="install.s2">Unzip it somewhere permanent.</span></li>
+          <li class="step"><span class="step__n">3</span><span data-i18n="install.s3">Open the extensions page and turn on Developer mode.</span></li>
+          <li class="step"><span class="step__n">4</span><span data-i18n="install.s4">Choose “Load unpacked” and select the folder.</span></li>
+          <li class="step"><span class="step__n">5</span><span data-i18n="install.s5">Open Chess.com — Knight is on the board.</span></li>
+        </ol>
+        <aside class="terminal reveal" aria-hidden="true">
+          <div class="terminal__bar"><span></span><span></span><span></span><em>chrome://extensions</em></div>
+          <pre class="terminal__body"><code><span class="c-dim"># load the unpacked extension</span>
+<span class="c-key">Developer mode</span>           <span class="c-on">on</span>
+<span class="c-key">Load unpacked</span>  <span class="c-path">./Knight-Chess-Helper</span>
+
+<span class="c-dim"># engine boot</span>
+<span class="c-ok">✓</span> stockfish.wasm   <span class="c-dim">loaded · offscreen</span>
+<span class="c-ok">✓</span> board attached   <span class="c-dim">chess.com</span>
+<span class="c-acc">●</span> ready.</code></pre>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── FAQ ───────────────────────── -->
+    <section class="block" id="faq">
+      <header class="block__head reveal">
+        <p class="eyebrow"><span data-i18n="faq.kicker">FAQ</span></p>
+        <h2 class="block__title" data-i18n="faq.title">Questions, answered.</h2>
+      </header>
+      <div class="faq reveal">
+        <details class="faq__item">
+          <summary><span data-i18n="faq.q1">Is Knight free?</span><span class="faq__plus" aria-hidden="true"></span></summary>
+          <p data-i18n="faq.a1">Yes — Knight is free and open source under the MIT license. You can read, build and modify every line.</p>
+        </details>
+        <details class="faq__item">
+          <summary><span data-i18n="faq.q2">Does it really run locally?</span><span class="faq__plus" aria-hidden="true"></span></summary>
+          <p data-i18n="faq.a2">Completely. Stockfish is compiled to WebAssembly and runs in your browser. After install, analysis works with no connection and nothing is ever sent to a server.</p>
+        </details>
+        <details class="faq__item">
+          <summary><span data-i18n="faq.q3">Is it allowed on Chess.com?</span><span class="faq__plus" aria-hidden="true"></span></summary>
+          <p data-i18n="faq.a3">Knight is built for analysis, study and post-game review. Please don’t use it to gain an unfair advantage in live games against other people — that breaks Chess.com’s rules and isn’t what it’s for.</p>
+        </details>
+        <details class="faq__item">
+          <summary><span data-i18n="faq.q4">Which browsers are supported?</span><span class="faq__plus" aria-hidden="true"></span></summary>
+          <p data-i18n="faq.a4">Any Chromium browser — Chrome, Edge, Brave. Firefox support is experimental for now.</p>
+        </details>
+        <details class="faq__item">
+          <summary><span data-i18n="faq.q5">Will it slow down my browser?</span><span class="faq__plus" aria-hidden="true"></span></summary>
+          <p data-i18n="faq.a5">The engine runs in a separate offscreen worker, so the page stays responsive. You can dial the strength and timing to taste in settings.</p>
+        </details>
+        <details class="faq__item">
+          <summary><span data-i18n="faq.q6">How do I update it?</span><span class="faq__plus" aria-hidden="true"></span></summary>
+          <p data-i18n="faq.a6">Download the newest release, replace the folder, and press reload on the extensions page. Your settings stay put.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- ───────────────────────── CLOSING CTA ───────────────────────── -->
+    <section class="cta">
+      <div class="cta__card reveal">
+        <div class="cta__glow" aria-hidden="true"></div>
+        <img class="cta__logo" src="./assets/knight-logo.png" alt="" width="64" height="64" />
+        <h2 class="cta__title" data-i18n="cta.title">Bring the engine to your board.</h2>
+        <p class="cta__sub" data-i18n="cta.sub">Free, open source, and entirely local. Install Knight and start studying smarter.</p>
+        <div class="cta__buttons">
+          <a class="btn btn--primary" href="https://github.com/physicalaff/Knight-Chess-Helper/releases" target="_blank" rel="noopener" data-i18n="cta.install">Install Knight</a>
+          <a class="btn btn--ghost" href="https://github.com/physicalaff/Knight-Chess-Helper" target="_blank" rel="noopener" data-i18n="cta.star">Star on GitHub</a>
+        </div>
+        <p class="cta__use" data-i18n="cta.use">Built for analysis, study and review — please don’t use it to gain an unfair advantage in live games.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- ───────────────────────── FOOTER ───────────────────────── -->
+  <footer class="footer">
+    <div class="footer__inner">
+      <div class="footer__brand">
+        <img src="./assets/knight-logo.png" alt="" width="26" height="26" />
+        <span>Knight Chess Helper</span>
+      </div>
+      <nav class="footer__links" aria-label="Footer">
+        <a href="https://github.com/physicalaff/Knight-Chess-Helper" target="_blank" rel="noopener" data-i18n="foot.repo">Repository</a>
+        <a href="https://github.com/physicalaff/Knight-Chess-Helper/releases" target="_blank" rel="noopener" data-i18n="foot.releases">Releases</a>
+        <a href="https://github.com/physicalaff/Knight-Chess-Helper/issues" target="_blank" rel="noopener" data-i18n="foot.issues">Issues</a>
+        <a href="https://github.com/physicalaff/Knight-Chess-Helper/blob/main/LICENSE" target="_blank" rel="noopener" data-i18n="foot.license">License</a>
+      </nav>
+    </div>
+    <p class="footer__fine">
+      <span data-i18n="foot.fine1">Powered by Stockfish (GPLv3). Knight is MIT-licensed.</span>
+      <span data-i18n="foot.fine2">Not affiliated with Chess.com.</span>
+    </p>
+  </footer>
+
+  <script src="./script.js"></script>
 </body>
 </html>
