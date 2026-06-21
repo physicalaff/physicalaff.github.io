@@ -1,3 +1,6 @@
+<img width="1200" height="630" alt="og-image" src="https://github.com/user-attachments/assets/f6ad8097-d39d-4ac0-a072-66a98ddba759" />
+
+
 # Knight — лендинг для GitHub Pages
 
 Красивый одностраничный сайт для репозитория
